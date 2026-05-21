@@ -1,4 +1,4 @@
-name: Compilar APK Roykola Visor
+name: Compilar APK Roykola Visor Completo
 
 on:
   push:
@@ -10,19 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Descargar el código del repositorio
+    - name: Descargar repositorio
       uses: actions/checkout@v4
 
-    - name: Limpiar y preparar carpetas
+    - name: Desempaquetar Proyecto Completo
       run: |
-        if [ -f "./app.zip" ]; then
-          # Descomprime el contenido
-          unzip -o app.zip -d .
-          # Si se creó una carpeta doble (app/app), movemos todo un nivel arriba
-          if [ -d "./app/app" ]; then
-            mv ./app/app/* ./app/ 2>/dev/null || true
+        if [ -f "./RoykolaVisor.zip" ]; then
+          # Descomprimimos todo el contenido en la raíz del servidor
+          unzip -o RoykolaVisor.zip -d ./temporal_extract
+          
+          # Movemos los archivos a la raíz real si venían dentro de una carpeta interna
+          if [ -d "./temporal_extract/RoykolaVisor" ]; then
+            cp -r ./temporal_extract/RoykolaVisor/* .
+          else
+            cp -r ./temporal_extract/* .
           fi
-          rm app.zip
+          
+          # Limpiamos temporales para no confundir al compilador
+          rm -rf temporal_extract
+          rm -f RoykolaVisor.zip
+          rm -f app.zip
         fi
 
     - name: Configurar Java JDK 17
@@ -30,19 +37,14 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: '17'
-        cache: 'gradle'
 
-    - name: Dar permisos de ejecución al compilador Gradle
-      run: chmod +x ./gradlew
-      continue-on-error: true
+    - name: Instalar Gradle compatible automáticamente
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.0'
 
-    - name: Compilar APK (Modo Debug forzado)
-      run: |
-        if [ -f "./gradlew" ]; then
-          ./gradlew :app:assembleDebug
-        else
-          gradle :app:assembleDebug
-        fi
+    - name: Compilar APK (Modo Debug)
+      run: gradle :app:assembleDebug
 
     - name: Subir el archivo APK generado
       uses: actions/upload-artifact@v4
