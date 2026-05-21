@@ -1,2 +1,3 @@
 rootProject.name = 'RoykolaVisor'
-include ':app'
+include ':'
+rootProject.name = "roykolavisor"
