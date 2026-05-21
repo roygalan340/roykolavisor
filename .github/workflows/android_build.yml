@@ -2,8 +2,8 @@ name: Compilar APK Roykola Visor
 
 on:
   push:
-    branches: [ main ]  # Se activa al subir cambios a la rama principal
-  workflow_dispatch:     # Te permite activarlo manualmente desde la web de GitHub
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,6 +12,13 @@ jobs:
     steps:
     - name: Descargar el código del repositorio
       uses: actions/checkout@v4
+
+    - name: Descomprimir carpeta de la app
+      run: |
+        if [ -f "./app.zip" ]; then
+          unzip app.zip -d .
+          rm app.zip
+        fi
 
     - name: Configurar Java JDK 17
       uses: actions/setup-java@v3
@@ -22,7 +29,7 @@ jobs:
 
     - name: Dar permisos de ejecución al compilador Gradle
       run: chmod +x ./gradlew
-      continue-on-error: true # Por si subiste el proyecto sin el wrapper gradlew
+      continue-on-error: true
 
     - name: Compilar APK (Modo Debug)
       run: |
